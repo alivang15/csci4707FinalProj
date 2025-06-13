@@ -1,0 +1,6 @@
+CREATE TABLE Author (
+  AuthID INT PRIMARY KEY,
+  Fname VARCHAR(32) NOT NULL,
+  Lname VARCHAR(32) NOT NULL,
+  Biography VARCHAR(512)
+);

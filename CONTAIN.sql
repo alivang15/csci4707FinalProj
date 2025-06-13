@@ -1,0 +1,13 @@
+CREATE TABLE Contain (
+    OrderID INT NOT NULL,
+    BookID INT NOT NULL,
+    BookQuantity INT NOT NULL CHECK (BookQuantity > 0),
+    BookPrice DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (OrderID, BookID),
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+    FOREIGN KEY (BookID) REFERENCES Book(BookID)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);

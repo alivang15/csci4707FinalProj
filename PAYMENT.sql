@@ -1,0 +1,10 @@
+CREATE TABLE Payment (
+  PaymentID  INT  PRIMARY KEY,
+  OrderID  INT  NOT NULL,
+  PayDate  DATE  NOT NULL,
+  PayMethod  VARCHAR(32)  NOT NULL,
+  Amount  DECIMAL(10, 2)  NOT NULL  CHECK (Amount > 0),
+  FOREIGN KEY(OrderID) REFERENCES Orders(OrderID)
+    ON UPDATE CASCADE
+    ON DELETE SET NULL
+);

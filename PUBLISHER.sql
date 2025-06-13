@@ -1,0 +1,5 @@
+CREATE TABLE Publisher (
+  CompanyName VARCHAR(32) PRIMARY KEY,
+  PhoneNum BIGINT NOT NULL,
+  Email VARCHAR(32)
+);
