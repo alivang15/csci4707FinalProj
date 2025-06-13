@@ -199,7 +199,8 @@ These choices balance data integrity with practical business requirements. For e
 
 We use https://www.db-fiddle.com/ to run all the files and use SQL query (CRUD operations) to test if our database is working correctly.
 
-Here are some test cases:
+### Example Test Cases:
+````sql
 
 -- Example: Add a new customer
 INSERT INTO Customer (CustID, Fname, Lname, EmailAddress, PhoneNumber, Street, ZipCode, State, City)
@@ -219,3 +220,4 @@ WHERE BookID = 101 AND Quantity > 0;
 DELETE FROM Orders
 WHERE OrderID = 201;
 
+`````
