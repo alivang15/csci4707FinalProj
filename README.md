@@ -199,25 +199,210 @@ These choices balance data integrity with practical business requirements. For e
 
 We use https://www.db-fiddle.com/ to run all the files and use SQL query (CRUD operations) to test if our database is working correctly.
 
-### Example Test Cases:
+### First run below code:
 ````sql
 
--- Example: Add a new customer
+-- Example: Add a new customer (Ensure this is run first if CustID 1 doesn't exist)
 INSERT INTO Customer (CustID, Fname, Lname, EmailAddress, PhoneNumber, Street, ZipCode, State, City)
 VALUES (1, 'John', 'Doe', 'john.doe@example.com', 1234567890, '123 Main St', 90210, 'CA', 'Beverly Hills');
 
--- Example: Retrieve all books by a certain publisher
-SELECT Title, Genre, Year, Price
-FROM Book
-WHERE PubName = 'Example Publisher Inc.';
+-- Example: Add a new Publisher
+INSERT INTO Publisher (CompanyName, PhoneNum, Email)
+VALUES ('Readers Guild Publishing', 5551234567, 'contact@readersguild.com');
 
--- Example: Update a book's quantity
-UPDATE Book
-SET Quantity = Quantity - 1
-WHERE BookID = 101 AND Quantity > 0;
+-- Example: Add a new Author
+INSERT INTO Author (AuthID, Fname, Lname, Biography)
+VALUES (101, 'Jane', 'Austen', 'Esteemed English novelist known for her romantic fiction set among the landed gentry.');
 
--- Example: Delete an order (this would also delete related entries in 'Contain' due to ON DELETE CASCADE)
-DELETE FROM Orders
-WHERE OrderID = 201;
+-- Example: Add a new Book (assuming 'Readers Guild Publishing' was just added)
+INSERT INTO Book (BookID, Title, PubName, Genre, Year, Price, Quantity)
+VALUES (101, 'Pride and Prejudice', 'Readers Guild Publishing', 'Classic Romance', 1999, 12.99, 50);
 
-`````
+-- Example: Add another Book by the same publisher (Corrected Year)
+INSERT INTO Book (BookID, Title, PubName, Genre, Year, Price, Quantity)
+VALUES (102, 'Sense and Sensibility', 'Readers Guild Publishing', 'Classic Romance', 1911, 11.99, 30); -- Changed 1811 to 1911 (or any valid year)
+
+-- Example: Link Author to Book in Wrote table
+INSERT INTO Wrote (AuthID, BookID)
+VALUES (101, 101);
+INSERT INTO Wrote (AuthID, BookID)
+VALUES (101, 102);
+
+-- Example: Add new Employees
+INSERT INTO Employee (EmpID, FName, LName, Position, HireDate)
+VALUES (501, 'Alice', 'Smith', 'Cashier', '2024-01-15');
+
+INSERT INTO Employee (EmpID, FName, LName, Position, HireDate)
+VALUES (500, 'Bob', 'Brown', 'Manager', '2023-01-10'); -- Ensure this manager is added if referenced later
+
+-- Example: Add a new Payment
+INSERT INTO Payment (PaymentID, PayDate, PayMethod, Amount)
+VALUES (301, '2024-03-01', 'Credit Card', 25.98);
+
+-- Example: Add a new Order (referencing Customer 1, Employee 501, and Payment 301)
+-- Make sure CustID 1, EmpID 501, and PaymentID 301 exist before running this
+INSERT INTO Orders (OrderID, CustID, CashID, PaymentID, ShipStreet, ShipCity, ShipState, ShipZip, PaymentStatus, OrderDate, ShipDate)
+VALUES (201, 1, 501, 301, '123 Main St', 'Beverly Hills', 'CA', 90210, TRUE, '2024-03-01', '2024-03-02');
+
+-- Example: Add items to the Order in Contain table
+-- Make sure OrderID 201 and BookIDs 101, 102 exist
+INSERT INTO Contain (OrderID, BookID, BookQuantity, BookPrice)
+VALUES (201, 101, 1, 12.99);
+INSERT INTO Contain (OrderID, BookID, BookQuantity, BookPrice)
+VALUES (201, 102, 1, 11.99);
+
+-- Example: Add an inventory record for a book
+-- Make sure BookID 101 and EmpID 500 (Manager) exist
+INSERT INTO Inventory (InventoryName, BookID, ManID, InvQuantity, RestockThres)
+VALUES ('Main Stock Romance', 101, 500, 50, 10);
+
+-- Example: Record assistance provided by an employee to a customer
+-- Make sure CustID 1 and EmpID 501 exist
+INSERT INTO Assisted (CustID, EmpID)
+VALUES (1, 501);
+
+````
+
+### Uncomment each SQL query to see how it works:
+
+````sql
+
+-- 1. VIEWING CURRENT DATA
+-- Show all customers
+SELECT * FROM Customer;
+
+-- Show all books
+SELECT * FROM Book;
+
+-- Show all orders
+SELECT * FROM Orders;
+
+-- Show all items in a specific order (e.g., OrderID 201, if it exists)
+SELECT * FROM Contain WHERE OrderID = 201;
+
+
+-- -- 2. UPDATING DATA
+-- -- Update a customer's email address
+-- UPDATE Customer
+-- SET EmailAddress = 'john.new.email@example.com'
+-- WHERE CustID = 1;
+
+-- -- Verify the update
+-- SELECT * FROM Customer WHERE CustID = 1;
+
+-- -- Update a book's price and quantity
+-- UPDATE Book
+-- SET Price = 14.99, Quantity = Quantity - 5
+-- WHERE BookID = 101; -- Assuming BookID 101 is 'Pride and Prejudice'
+
+-- -- Verify the book update
+-- SELECT * FROM Book WHERE BookID = 101;
+
+
+-- -- 3. DELETING SPECIFIC DATA (A ROW THAT DOESN'T HAVE MAJOR CASCADE EFFECTS YET)
+-- -- Let's assume we add a temporary author and then delete them.
+-- INSERT INTO Author (AuthID, Fname, Lname, Biography)
+-- VALUES (999, 'Temp', 'Author', 'A temporary author for deletion test.');
+
+-- -- View the temporary author
+-- SELECT * FROM Author WHERE AuthID = 999;
+
+-- -- Delete the temporary author
+-- DELETE FROM Author WHERE AuthID = 999;
+
+-- -- Verify deletion
+-- SELECT * FROM Author WHERE AuthID = 999; -- Should return no rows
+
+
+-- -- 4. DELETING AN ENTITY AND OBSERVING `ON DELETE SET NULL`
+-- -- Scenario: Delete an Employee (e.g., a Cashier) and see their Orders' CashID become NULL.
+-- -- First, let's see orders handled by Employee 501 (Alice Smith, Cashier)
+-- SELECT OrderID, CustID, CashID FROM Orders WHERE CashID = 501;
+
+-- -- Now, delete Employee Alice Smith
+-- DELETE FROM Employee WHERE EmpID = 501;
+
+-- -- Verify Employee 501 is deleted
+-- SELECT * FROM Employee WHERE EmpID = 501; -- Should return no rows
+
+-- -- Check the Orders table again. Orders previously handled by EmpID 501 should now have CashID = NULL
+-- SELECT OrderID, CustID, CashID FROM Orders WHERE OrderID = 201; -- Assuming Order 201 was handled by EmpID 501
+
+-- -- Also check the Assisted table (if Alice assisted anyone, those records would be gone due to ON DELETE CASCADE on Assisted.EmpID)
+-- SELECT * FROM Assisted WHERE EmpID = 501; -- Should return no rows
+
+
+-- -- 5. DELETING AN ENTITY AND OBSERVING `ON DELETE CASCADE`
+-- -- Scenario: Delete a Book and see its records in 'Wrote' and 'Contain' also get deleted.
+-- -- Also, its record in 'Inventory' will be deleted because Inventory.BookID has ON DELETE CASCADE.
+
+-- -- First, let's see records related to BookID 102 ('Sense and Sensibility')
+-- SELECT * FROM Wrote WHERE BookID = 102;
+-- SELECT * FROM Contain WHERE BookID = 102; -- (This would be for any order that contained BookID 102)
+-- SELECT * FROM Inventory WHERE BookID = 102;
+
+-- -- Now, delete Book 'Sense and Sensibility' (BookID 102)
+-- DELETE FROM Book WHERE BookID = 102;
+
+-- -- Verify Book 102 is deleted
+-- SELECT * FROM Book WHERE BookID = 102; -- Should return no rows
+
+-- -- Check Wrote table: Records for BookID 102 should be gone
+-- SELECT * FROM Wrote WHERE BookID = 102; -- Should return no rows
+
+-- -- Check Contain table: Line items for BookID 102 in any order should be gone
+-- -- (If Order 201 contained BookID 102, that specific line item would be removed)
+-- SELECT * FROM Contain WHERE OrderID = 201; -- Re-check order 201 items
+
+-- -- Check Inventory table: Record for BookID 102 should be gone
+-- SELECT * FROM Inventory WHERE BookID = 102; -- Should return no rows
+
+
+-- -- 6. DELETING A CUSTOMER AND OBSERVING `ON DELETE CASCADE` (MORE EXTENSIVE)
+-- -- Scenario: Delete Customer 1 (John Doe). This should cascade to Orders, then Contain, and also Assisted.
+
+-- -- First, see records related to Customer 1
+-- SELECT * FROM Orders WHERE CustID = 1;
+-- SELECT OrderID FROM Orders WHERE CustID = 1; -- Get OrderIDs to check Contain table
+-- -- Assuming OrderID 201 belongs to CustID 1:
+-- SELECT * FROM Contain WHERE OrderID = 201;
+-- SELECT * FROM Assisted WHERE CustID = 1;
+
+-- -- Now, delete Customer 1
+-- DELETE FROM Customer WHERE CustID = 1;
+
+-- -- Verify Customer 1 is deleted
+-- SELECT * FROM Customer WHERE CustID = 1; -- Should return no rows
+
+-- -- Check Orders table: Orders for CustID 1 should be gone
+-- SELECT * FROM Orders WHERE CustID = 1; -- Should return no rows
+
+-- -- Check Contain table: Items for orders belonging to CustID 1 (e.g., OrderID 201) should be gone
+-- SELECT * FROM Contain WHERE OrderID = 201; -- Should return no rows
+
+-- -- Check Assisted table: Assistance records for CustID 1 should be gone
+-- SELECT * FROM Assisted WHERE CustID = 1; -- Should return no rows
+
+-- -- 7. DELETING A PUBLISHER AND OBSERVING `ON DELETE SET NULL`
+-- -- Scenario: Delete a Publisher and see Book.PubName become NULL for books by that publisher.
+-- -- Let's assume 'Readers Guild Publishing' is the publisher for BookID 101.
+-- SELECT BookID, Title, PubName FROM Book WHERE PubName = 'Readers Guild Publishing';
+
+-- -- Delete the publisher
+-- DELETE FROM Publisher WHERE CompanyName = 'Readers Guild Publishing';
+
+-- -- Verify the publisher is deleted
+-- SELECT * FROM Publisher WHERE CompanyName = 'Readers Guild Publishing'; -- Should return no rows
+
+-- -- Check the Book table. Books previously published by 'Readers Guild Publishing' should now have PubName = NULL
+-- SELECT BookID, Title, PubName FROM Book WHERE BookID = 101;
+
+````
+
+**Important Notes for Testing:**
+
+*   **Run in Order:** Execute these test cases in the order provided, as some depend on the state created by previous ones.
+*   **Adapt IDs:** If your actual `INSERT` statements used different IDs (e.g., for `BookID`, `CustID`, `OrderID`), you'll need to adjust the IDs in these test cases accordingly.
+*   **Data State:** The outcome of `DELETE` operations, especially those with `CASCADE` or `SET NULL`, heavily depends on the data present in your tables at the time of execution.
+*   **db-fiddle.com:** When using db-fiddle, you can put your schema (CREATE TABLE statements) in the left panel and your DML (INSERT, SELECT, UPDATE, DELETE test cases) in the right panel. Run the schema first, then run the DML. You might want to run DML statements in smaller batches to observe the results more clearly.
+
